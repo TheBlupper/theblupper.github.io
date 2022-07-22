@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PyFuck - Any Python Program using 8 characters</title>
     <style>
-        p, label, li, ul, h3 {
+        p, label, li, ul, h3, span {
             font-family: Consolas, monaco, monospace;
             font-size: 14px;
             font-style: normal;
@@ -41,7 +41,6 @@
             width: 20em;
             height: 5em;
             margin-top: 1em;
-            margin-bottom: 1em;
         }
         ul.showcase li {
             white-space: pre;
@@ -51,7 +50,7 @@
 </head>
 <body>
     <!-- I'm not a webdev alright, don't say anything mean :( -->
-    <img src="pyfuck.png"/>
+    <img src="pyfuck.svg"/>
     <p>PyFuck is a <a href="http://www.jsfuck.com/">JSFuck</a> alternative for Python,
     making it possible to write any Python3 program using only 8 unique characters: exc(%=')</p>
 
@@ -63,6 +62,7 @@
     <input type="checkbox" id="runInParentCheck" checked/>
     <label for="runInParentCheck" >Run In Parent Scope</label>
     <div><textarea id="outputArea" class="output"></textarea></div>
+    <span id="charCount">0</span><span> chars</span>
     <h3>How does it work?</h3>
     <p>(any names in practice only contains e, x and c)</p>
     <ul class="showcase">
@@ -97,9 +97,11 @@
         inputArea = document.getElementById("inputArea");
         outputArea = document.getElementById("outputArea");
         runInParentCheck = document.getElementById("runInParentCheck");
+        charCount = document.getElementById("charCount");
         function encode() {
             const encoded = pyfuckup(inputArea.value, runInParentCheck.checked);
             outputArea.value = encoded;
+            charCount.textContent = encoded.length.toString();
         }
     </script>
 </body>
