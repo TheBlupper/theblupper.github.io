@@ -46,6 +46,7 @@
             white-space: pre;
         }
     </style>
+    <script src="dijkstra.js"></script>
     <script src="pyfuck.js"></script>
 </head>
 <body>
@@ -59,8 +60,13 @@
 
     <div><textarea id="inputArea" class="input"></textarea></div>
     <button onclick="encode()">Encode</button>
+
     <input type="checkbox" id="runInParentCheck" checked/>
     <label for="runInParentCheck" >Run In Parent Scope</label>
+
+    <input type="checkbox" id="useDijkstraCheck" checked/>
+    <label for="useDijkstraCheck" >Optimize number creation (slow)</label>
+
     <div><textarea id="outputArea" class="output"></textarea></div>
     <span id="charCount">0</span><span> chars</span>
     <h3>How does it work?</h3>
@@ -74,10 +80,7 @@
                         exec('n43=%x'%n43)
                         exec('n43=%x'%n43)</li>
         <li>n2=2                 => exec('n2=n1%cn1'%n43)</li>
-        <li>n4=4                 => exec('n4=n2%cn2'%n43)</li>
         <li>...</li>
-        <li>n64=64               => exec('n64=n32%cn32'%n43)</li>
-        <li>Any number 1&ltn&lt128 can now be made by adding the powers of 2</li>
         <li>prog=''              => exec('''prog=('')''')</li>
         <li>prog+=chr(97)        => exec('''prog%c=('%%c')'''%n43%n97)</li>
         <li>exec(prog)           => exec(prog)      :O</li>
@@ -97,9 +100,10 @@
         inputArea = document.getElementById("inputArea");
         outputArea = document.getElementById("outputArea");
         runInParentCheck = document.getElementById("runInParentCheck");
+        useDijkstraCheck = document.getElementById("useDijkstraCheck");
         charCount = document.getElementById("charCount");
         function encode() {
-            const encoded = pyfuckup(inputArea.value, runInParentCheck.checked);
+            const encoded = pyfuckup(inputArea.value, runInParentCheck.checked, useDijkstraCheck.checked);
             outputArea.value = encoded;
             charCount.textContent = encoded.length.toString();
         }

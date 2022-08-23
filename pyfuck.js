@@ -24,24 +24,18 @@ function* nameGenerator() {
 }
 
 
-function pyfuckup(program, runInParent) {
-    gen = nameGenerator()
+function pyfuckup(program, runInParent, useDijkstra) {
+    const gen = nameGenerator()
     getname = () => gen.next().value
-    names = {
+    let names = {
         1: getname(),
         0: getname(),
         3: getname(),
         43: getname(),
-        2: getname(),
-        4: getname(),
-        8: getname(),
-        16: getname(),
-        32: getname(),
-        64: getname(),
         'joiner': getname(),
         'program': getname()
     }
-    execs = [];
+    const execs = [];
     compile = () => execs.map(ex => "exec(" + ex + ")").join("==");
     add_exec = (x) => execs.push(x);
 
@@ -52,66 +46,88 @@ function pyfuckup(program, runInParent) {
     add_exec(`'${names[3]}=%x%%x'%${names[1]}%${names[1]}`);
     add_exec(`'${names[3]}=%x%%x%%%%x%%%%%%%%x'%${names[0]}%${names[3]}%${names[1]}%${names[1]}`);
 
-    // Create 43 (essentially) utilizing int(hex(int(hex(103))))
+    // Create 43 utilizing int(hex(int(hex(103))))
     add_exec(`'${names[43]}=%x%%x%%%%x'%${names[1]}%${names[0]}%${names[3]}`);
     add_exec(`'${names[43]}=%x'%${names[43]}`);
     add_exec(`'${names[43]}=%x'%${names[43]}`);
     names["+"] = names[43]; // For clarity
 
-    // Construct all powers of 2 up to 2**6
-    for (var p = 1; p <= 6; p++) {
-        add_exec(`'${names[Math.pow(2, p)]}=${names[Math.pow(2, p - 1)]}%c${names[Math.pow(2, p - 1)]}'%${names['+']}`);
-    }
-    function storeNumber(num, name) {
-        // For the moment we limit ourselves to ASCII, this can be expanded later
-        if (128 <= num || num <= 0)
-            throw 'Number not in range';
-        pows = [];
-        for (var i = 0; i <= 6; i++) {
-            if ((num >> i) & 1)
-                pows.push(Math.pow(2, i))
-        }
-        add_exec(`'${name}=${names[pows.pop()]}'`)
-        while (pows.length)
-            add_exec(`'${name}%c=${names[pows.pop()]}'%${names[43]}`)
-    }
-    charset = [...new Set(program)]
+    const charset = [...new Set(program)];
     if (!runInParent)
-    charset.push("{","}",",")
-    // Sort characters by most commonly occuring
-    charset.sort((x, y) => (program.split(y).length - program.split(x).length))
+        charset.push("{","}",",");
+    const charcodes = charset.map((ch)=>ch.charCodeAt(0));
 
-    for (ch of charset) {
-        chcode = ch.charCodeAt(0);
-        if (chcode in names) continue;
-        name = getname()
-        storeNumber(chcode, name)
-        names[chcode] = name
+    if (useDijkstra) {
+        names[45] = getname();
+        add_exec(`'${names[45]}=${names[43]}%c${names[1]}%%c${names[1]}'%${names['+']}%${names['+']}`);
+        const path = dijkstra(charcodes);
+        path.forEach((op)=>{
+            if (op.n in names) return;
+            let name = getname();
+            let [a,b] = op.args;
+            add_exec(`'${name}=${names[a]}%c${names[b]}'%${names[op.op.symbol.charCodeAt(0)]}`);
+            names[op.n]=name;
+        });
+    } else {
+        // Construct numbers using powers of 2
+        names = {
+            ...names,
+            2: getname(),
+            4: getname(),
+            8: getname(),
+            16: getname(),
+            32: getname(),
+            64: getname()
+        }
+        // Construct all powers of 2 up to 2**6
+        for (var p = 1; p <= 6; p++) {
+            add_exec(`'${names[Math.pow(2, p)]}=${names[Math.pow(2, p - 1)]}%c${names[Math.pow(2, p - 1)]}'%${names['+']}`);
+        }
+        function storeNumber(num, name) {
+            // For the moment we limit ourselves to ASCII, this can be expanded later
+            if (128 <= num || num <= 0)
+                throw 'Number not in range';
+            pows = [];
+            for (var i = 0; i <= 6; i++) {
+                if ((num >> i) & 1);
+                    pows.push(Math.pow(2, i));
+            }
+            add_exec(`'${name}=${names[pows.pop()]}'`);
+            while (pows.length)
+                add_exec(`'${name}%c=${names[pows.pop()]}'%${names[43]}`);
+        }
+        for (ch of charset) {
+            let chcode = ch.charCodeAt(0);
+            if (chcode in names) continue;
+            let name = getname();
+            storeNumber(chcode, name);
+            names[chcode] = name;
+        }
     }
 
-    add_exec(`'''${names["joiner"]}=('%c%%c%%%%c%%%%%%%%c')'''`)
+    add_exec(`'''${names["joiner"]}=('%c%%c%%%%c%%%%%%%%c')'''`);
 
     add_exec(`'''${names["program"]}=('')'''`)
-    chars = program.split("");
+    let chars = program.split("");
     while (chars.length) {
         if (chars.length >= 4) {
             // 4 characters at a time for efficiency
-            [a, b, c, d] = chars.slice(0, 4).map((ch) => names[ch.charCodeAt(0)])
-            chars = chars.slice(4)
+            const [a, b, c, d] = chars.slice(0, 4).map((ch) => names[ch.charCodeAt(0)]);
+            chars = chars.slice(4);
             add_exec(`'${names["program"]}%c=${names["joiner"]}%%${a}%%${b}%%${c}%%${d}'%${names["+"]}`);
         } else {
             add_exec(`'''${names["program"]}%c=('%%c')'''%${names["+"]}%${names[chars.shift().charCodeAt(0)]}`);
         }
     }
     if (runInParent) {
-        add_exec(names['program'])
+        add_exec(names['program']);
     } else {
         [c, br, bl] = [
             names[",".charCodeAt(0)],
             names["{".charCodeAt(0)],
             names["}".charCodeAt(0)]
         ]
-        add_exec(`'exec(${names["program"]}%c%%c%%%%c)'%${c}%${br}%${bl}`)
+        add_exec(`'exec(${names["program"]}%c%%c%%%%c)'%${c}%${br}%${bl}`);
     }
-    return compile()
+    return compile();
 }
