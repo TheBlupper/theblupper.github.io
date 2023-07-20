@@ -109,14 +109,15 @@ function pyfuckup(program, runInParent, useDijkstra) {
 
     add_exec(`'''${names["program"]}=('')'''`)
     let chars = program.split("");
+    let forbidden_chars = ["%"];
     while (chars.length) {
-        if (chars.length >= 4) {
+        if (chars.length >= 4 && chars.slice(0, 4).every((ch) => !forbidden_chars.includes(ch))) {
             // 4 characters at a time for efficiency
             const [a, b, c, d] = chars.slice(0, 4).map((ch) => names[ch.charCodeAt(0)]);
             chars = chars.slice(4);
             add_exec(`'${names["program"]}%c=${names["joiner"]}%%${a}%%${b}%%${c}%%${d}'%${names["+"]}`);
         } else {
-            add_exec(`'''${names["program"]}%c=('%%c')'''%${names["+"]}%${names[chars.shift().charCodeAt(0)]}`);
+            add_exec(`'''${names["program"]}%c='%%c'%%${names[chars.shift().charCodeAt(0)]}'''%${names["+"]}`);
         }
     }
     if (runInParent) {
