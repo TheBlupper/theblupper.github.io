@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark" />
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.jade.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.colors.min.css"
+    />
+    <style>
+    li {
+        list-style: none !important;
+    }
+    </style>
+    <title>RegLex</title>
+  </head>
+  <body>
+    <main class="container">
+        <h1>RegLex</h1>
+        <span>
+            <fieldset role="group">
+                <input id="search-box" type="search" aria-label="Sök" placeholder="Sök...">
+                <!-- <input type="button" value="Sök"> -->
+            </fieldset>
+
+              <label>
+                <input id="include-extended" type="checkbox" role="switch" />
+                Inkludera böjningar
+              </label>
+
+              <label>
+                <input id="filter-categories" type="checkbox" role="switch" />
+                Filtrera efter kategori
+              </label>
+
+              <article id="categories-div" style="display: none;">
+                <header>
+                  <input id="search-categories-box" type="search" aria-label="Sök" placeholder="Sök...">                  
+                </header>
+                <div style="overflow-y:auto;max-height:20em;">
+                  <ul id="categories-list" style="columns:3;"></ul>
+                </div>
+            </article>
+            
+            <article id="error-dialog" class="pico-color-red-400" style="display:none;">
+              Invalid
+            </article>
+
+            <h3>Resultat <small id="results-count-txt"></small>:</h3>
+            <span id="loading-text" aria-busy="true">Laddar databas...</span>
+            <table class="striped">
+                <tbody id="results-tbl-bdy">
+                </tbody>
+            </table>
+            <button id="show-more-btn">Visa fler</button>
+            
+        </span>
+    </main>
+    <script src="./reglex.js"></script>
+  </body>
+</html>
