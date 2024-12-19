@@ -93,7 +93,7 @@ function runSearch(limit = chunkSize) {
     hideErrorMsg();
     searchBox.ariaInvalid = false;
     let count = 0;
-    let matches = words.filter((word_struct) => (pattern.test(word_struct[0]) || pattern.test(word_struct[1])) &&
+    let matches = words.filter((word_struct) => (pattern.test(word_struct[0]) || (word_struct[1].length > 0 && pattern.test(word_struct[1]))  ) &&
                                                         (extended || !word_struct[2]) &&
                                                         (!filterCategories || word_struct[3].some((cat)=>selectedCategories[cat])) &&
                                                         (count < limit) && (++count));
